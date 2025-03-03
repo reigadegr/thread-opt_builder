@@ -14,7 +14,7 @@
 
 name: ci-build
 on:
-  workflow_dispatc:    
+  workflow_dispatch:
 env:
   CARGO_TERM_COLOR: always
 jobs:
