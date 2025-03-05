@@ -48,7 +48,21 @@ jobs:
           git clone --depth 1 https://github.com/reigadegr/thread-opt -b dev
           mv thread-opt/*  .
           rm -rf .cargo Cargo.lock
-          export RUSTFLAGS="-C default-linker-libraries"
+          export RUSTFLAGS="
+            -C default-linker-libraries \
+            -C link-args=-fshort-enums \
+            -C link-args=-fmerge-all-constants \
+            -C link-args=-fno-exceptions \
+            -C link-args=-fno-unwind-tables \
+            -C link-args=-fno-asynchronous-unwind-tables \
+            -C link-args=-fomit-frame-pointer \
+            -C link-args=-fno-rtti \
+            -C link-args=-fvisibility=hidden \
+            -C link-args=-stdlib=libc++ \
+            -C link-args=-static-libgcc \
+            -C link-args=-static-libstdc++ \
+            -C link-args=-flto \
+            -C link-args=-Wl,-O3,--lto-O3,--gc-sections,--as-needed,--icf=all,-z,norelro,--pack-dyn-relocs=android+relr,-x,-s,--strip-all"
           python3 ./make.py build --release --nightly
       - name: Prepare artifacts
         run: |
