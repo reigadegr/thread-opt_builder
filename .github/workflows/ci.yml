@@ -56,7 +56,15 @@ jobs:
           wget https://github.com/reigadegr/thread-opt_builder/releases/download/pgo/merged.profdata
           mkdir -p ./target/pgo-data
           cp merged.profdata ./target/pgo-data
-          sh pgo.sh
+          # sh pgo.sh
+          pgo_path=$(realpath ./target/pgo-data)
+
+          export RUSTFLAGS="-C default-linker-libraries \
+          -C profile-use=$pgo_path/merged.profdata \
+          -C link-args=-fomit-frame-pointer \
+          -C link-args=-Wl,--as-needed,--icf=all,-z,relro,--pack-dyn-relocs=android+relr,-x,-s,--strip-all,-z,now"
+          echo $RUSTFLAGS
+          python3 ./make.py build --release --nightly -v
       - name: Prepare artifacts
         run: |
           mkdir -p output/artifact/release
