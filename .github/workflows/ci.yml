@@ -52,6 +52,9 @@ jobs:
           git clone --depth 1 https://github.com/reigadegr/thread-opt -b dev
           mv thread-opt/*  .
           rm -rf .cargo Cargo.lock
+          wget https://github.com/reigadegr/thread-opt_builder/releases/download/pgo/merged.profdata
+          mkdir -p ./target/pgo-data
+          cp merged.profdata ./target/pgo-data
           sh pgo.sh
       - name: Prepare artifacts
         run: |
