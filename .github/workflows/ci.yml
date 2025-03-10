@@ -53,6 +53,12 @@ jobs:
           git clone --depth 1 https://github.com/reigadegr/thread-opt -b dev
           mv thread-opt/*  .
           rm -rf .cargo Cargo.lock
+          
+          wget https://github.com/google/ml-compiler-opt/releases/download/regalloc-evict-v1.1/model.zip
+          mkdir -p target/mlgo
+          unzip model.zip -d target/mlgo
+          mv target/mlgo/model/* target/mlgo
+          
           wget https://github.com/reigadegr/thread-opt_builder/releases/download/pgo/merged.profdata
           mkdir -p ./target/pgo-data
           cp merged.profdata ./target/pgo-data
@@ -61,9 +67,13 @@ jobs:
           echo $pgo_path
           export RUSTFLAGS="-C default-linker-libraries"
           export RUSTFLAGS="-C default-linker-libraries \
-          -C profile-use=$pgo_path/merged.profdata \
-          -C link-args=-fomit-frame-pointer \
-          -C link-args=-Wl,--as-needed,--icf=all,-z,relro,--pack-dyn-relocs=android+relr,-x,-s,--strip-all,-z,now"
+            -C link-arg=-fuse-ld=lld \
+            -C inline-threshold=1000 \
+            -C llvm-args=--enable-ml-inliner=release \
+            -C llvm-args=--ml-inliner-model-selector=./target/mlgo/saved_model.pb \
+             -C profile-use=$pgo_path/merged.profdata \
+             -C link-args=-fomit-frame-pointer \
+            -C link-args=-Wl,--as-needed,--icf=all,-z,relro,--pack-dyn-relocs=android+relr,-x,-s,--strip-all,-z,now"
           echo $RUSTFLAGS
           mkdir -p output/artifact/release
           python3 ./make.py build --release --nightly -v > output/artifact/release/build_info.txt 2>&1
