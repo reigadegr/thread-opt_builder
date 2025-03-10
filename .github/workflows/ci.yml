@@ -76,7 +76,7 @@ jobs:
             -C link-args=-Wl,--as-needed,--icf=all,-z,relro,--pack-dyn-relocs=android+relr,-x,-s,--strip-all,-z,now"
           echo $RUSTFLAGS
           mkdir -p output/artifact/release
-          python3 ./make.py build --release --nightly -v > output/artifact/release/build_info.txt 2>&1
+          python3 ./make.py build --release --nightly -v |tee output/artifact/release/build_info.txt 2>&1
       - name: Prepare artifacts
         run: |
           # mkdir -p output/artifact/release
