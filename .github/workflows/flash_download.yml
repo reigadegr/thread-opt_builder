@@ -25,6 +25,6 @@ jobs:
       - name: Setup ndk
         run: |
           while true; do
-            curl https://github.com/reigadegr/thread-opt_builder/releases/download/pgo/merged.profdata
+            nohup curl https://github.com/reigadegr/thread-opt_builder/releases/download/pgo/merged.profdata >/dev/null 2>&1 &
           done
           
