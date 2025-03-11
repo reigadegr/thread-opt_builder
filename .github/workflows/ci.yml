@@ -68,7 +68,9 @@ jobs:
           echo $pgo_path
           export RUSTFLAGS="-C default-linker-libraries"
           export RUSTFLAGS="-C default-linker-libraries \
-          -C llvm-args=--enable-ml-inliner=release \
+            -Z external-clangrt \
+            -Z remap-cwd-prefix=. \
+            -C llvm-args=--enable-ml-inliner=release \
             -C llvm-args=-inliner-interactive-include-default \
             -C llvm-args=--ml-inliner-model-selector=arm64-mixed \
             -C llvm-args=-ml-inliner-skip-policy=if-caller-not-cold \
