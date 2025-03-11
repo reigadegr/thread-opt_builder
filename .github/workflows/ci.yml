@@ -68,9 +68,10 @@ jobs:
           echo $pgo_path
           export RUSTFLAGS="-C default-linker-libraries"
           export RUSTFLAGS="-C default-linker-libraries \
-            -C inline-threshold=1000 \
-            -C llvm-args=--enable-ml-inliner=release \
-            -C llvm-args=--ml-inliner-model-selector=./target/mlgo/saved_model.pb \
+          -C llvm-args=--enable-ml-inliner=release \
+            -C llvm-args=-inliner-interactive-include-default \
+            -C llvm-args=--ml-inliner-model-selector=arm64-mixed \
+            -C llvm-args=-ml-inliner-skip-policy=if-caller-not-cold \
              -C profile-use=$pgo_path/merged.profdata \
              -C link-args=-fomit-frame-pointer \
             -C link-args=-Wl,--as-needed,--icf=all,-z,relro,--pack-dyn-relocs=android+relr,-x,-s,--strip-all,-z,now"
