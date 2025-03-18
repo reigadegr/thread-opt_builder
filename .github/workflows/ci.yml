@@ -145,10 +145,10 @@ jobs:
       - name: Prepare artifacts
         run: |
           mkdir -p output/artifact/release
-          unzip "output/thread-opt_debug_*.zip" -d output/artifact/debug
+          unzip "output/thread-opt_release_*.zip" -d output/artifact/release
       - name: Upload release version
         uses: actions/upload-artifact@v4
         with:
-          name: thread-opt(debug)
+          name: thread-opt(release_no_pgo)
           compression-level: 9
-          path: output/artifact/debug
+          path: output/artifact/release
