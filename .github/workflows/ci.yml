@@ -15,86 +15,11 @@
 name: ci-build
 on:
   workflow_dispatch:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
 env:
   CARGO_TERM_COLOR: always
 jobs:
+          
   release-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup ndk
-        run: |
-          ndk_url=$(wget -qO- https://github.com/android/ndk/releases/latest | grep -e 'https://dl.google.com/android/repository/android-ndk-.*-linux.zip' | sed -n 's/.*<a href="\([^"]*\)".*/\1/p')
-          wget -O ndk.zip $ndk_url -nv
-          mkdir ~/ndk_temp
-          unzip ndk.zip -d ~/ndk_temp 2>&1 > /dev/null
-          mv ~/ndk_temp/*/* ~/ndk_temp
-          cp -f libbinder_ndk.so ~/ndk_temp/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/35/libbinder_ndk.so
-      - name: Setup rust toolchains
-        run: |
-          rustup default nightly
-          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
-          rustup component add rust-src llvm-tools-preview
-          rustup update
-      - name: Install cargo ndk
-        run: cargo install cargo-ndk
-      - name: Other deps
-        run: |
-          sudo apt update
-          sudo apt install gcc-multilib llvm clang make cmake
-      - name: Build
-        run: |
-          export ANDROID_NDK_HOME=$(realpath ~/ndk_temp)
-          export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
-          rm -rf module
-          git clone --depth 1 https://github.com/reigadegr/thread-opt -b dev
-          mv thread-opt/*  .
-          rm -rf .cargo Cargo.lock
-          
-          wget https://github.com/google/ml-compiler-opt/releases/download/regalloc-evict-v1.1/model.zip
-          mkdir -p target/mlgo
-          unzip model.zip -d target/mlgo
-          mv target/mlgo/model/* target/mlgo
-          
-          wget https://github.com/reigadegr/thread-opt_builder/releases/download/pgo/merged.profdata
-          mkdir -p ./target/pgo-data
-          cp merged.profdata ./target/pgo-data
-          # sh pgo.sh
-          export pgo_path=$(realpath ./target/pgo-data)
-          echo $pgo_path
-          export RUSTFLAGS="-C default-linker-libraries"
-          export RUSTFLAGS="-C default-linker-libraries \
-            -Z external-clangrt \
-            -Z macro-backtrace \
-            -Z remap-cwd-prefix=. \
-            -Z dep-info-omit-d-target \
-            -C target-feature=xeon \
-            -C llvm-args=--enable-ml-inliner=release \
-            -C llvm-args=-inliner-interactive-include-default \
-            -C llvm-args=-ml-inliner-model-selector=arm64-mixed \
-            -C llvm-args=-ml-inliner-skip-policy=if-caller-not-cold \
-             -C profile-use=$pgo_path/merged.profdata \
-             -C link-args=-fomit-frame-pointer \
-            -C link-args=-Wl,--as-needed,--icf=all,-z,relro,--pack-dyn-relocs=android+relr,-x,-s,--strip-all,-z,now"
-          echo $RUSTFLAGS
-          mkdir -p output/artifact/release
-          python3 ./make.py build --release --nightly -v |tee output/artifact/release/build_info.txt 2>&1
-      - name: Prepare artifacts
-        run: |
-          # mkdir -p output/artifact/release
-          unzip "output/thread-opt_release_*.zip" -d output/artifact/release
-      - name: Upload release version
-        uses: actions/upload-artifact@v4
-        with:
-          name: thread-opt(release)
-          compression-level: 9
-          path: output/artifact/release
-          
-  no-pgo-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -126,23 +51,8 @@ jobs:
           git clone --depth 1 https://github.com/reigadegr/thread-opt -b dev
           mv thread-opt/*  .
           rm -rf .cargo Cargo.lock
-          echo $pgo_path
-          export RUSTFLAGS="-C default-linker-libraries"
-          export RUSTFLAGS="-C default-linker-libraries \
-            -Z external-clangrt \
-            -Z macro-backtrace \
-            -Z remap-cwd-prefix=. \
-            -Z dep-info-omit-d-target \
-            -C target-feature=xeon \
-            -C llvm-args=--enable-ml-inliner=release \
-            -C llvm-args=-inliner-interactive-include-default \
-            -C llvm-args=-ml-inliner-model-selector=arm64-mixed \
-            -C llvm-args=-ml-inliner-skip-policy=if-caller-not-cold \
-             -C link-args=-fomit-frame-pointer \
-            -C link-args=-Wl,--as-needed,--icf=all,-z,relro,--pack-dyn-relocs=android+relr,-x,-s,--strip-all,-z,now"
-          echo $RUSTFLAGS
           mkdir -p output/artifact/release
-          python3 ./make.py build --release --nightly -v |tee output/artifact/release/build_info.txt 2>&1
+          sh release.sh | tee output/artifact/release/build_info.txt 2>&1
       - name: Prepare artifacts
         run: |
           mkdir -p output/artifact/release
@@ -151,6 +61,6 @@ jobs:
       - name: Upload release version
         uses: actions/upload-artifact@v4
         with:
-          name: thread-opt(release_no_pgo)
+          name: thread-opt(release)
           compression-level: 9
           path: output/artifact/release
