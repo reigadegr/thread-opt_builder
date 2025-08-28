@@ -52,6 +52,7 @@ jobs:
           mv thread-opt/*  .
           rm -rf .cargo Cargo.lock
           mkdir -p output/artifact/release
+          cargo update
           sh release.sh | tee output/artifact/release/build_info.txt 2>&1
       - name: Prepare artifacts
         run: |
